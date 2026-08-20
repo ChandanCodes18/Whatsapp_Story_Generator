@@ -1,0 +1,1336 @@
+/* ============================================================
+   Editor Sidebar — CSS Module
+   ============================================================
+   Scoped styles for the left-hand editor panel.
+   All classes are locally scoped via CSS Modules.
+   ============================================================ */
+
+/* ── Main Layout ────────────────────────────────────────── */
+.editorLayout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--background);
+}
+
+/* ── Sidebar Shell ────────────────────────────────────────── */
+.sidebar {
+  width: 400px;
+  min-width: 400px;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  position: relative;
+  z-index: var(--z-sticky);
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}
+
+/* ── Sidebar Header (Logo area) ───────────────────────────── */
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background-color: var(--card);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 60px;
+}
+
+.sidebarHeader h1 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  color: var(--foreground);
+}
+
+.sidebarHeader span {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+.sidebarLogo {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary), #6d28d9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-primary);
+}
+
+/* ── Sidebar Content Area ─────────────────────────────────── */
+.sidebarContent {
+  flex: 1;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ── Card (Accordion Section) ─────────────────────────────── */
+.card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal) ease,
+              border-color var(--duration-normal) ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Card Header (Accordion Trigger) ─────────────────────── */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3-5) var(--space-4);
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background: none;
+  text-align: left;
+  color: var(--foreground);
+  transition: background-color var(--duration-fast) ease;
+  position: relative;
+}
+
+.cardHeader:hover {
+  background-color: var(--muted);
+}
+
+.cardHeaderIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background-color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: var(--text-base);
+}
+
+.cardHeaderTitle {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: var(--leading-tight);
+}
+
+.cardHeaderSubtitle {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  font-weight: 400;
+  display: block;
+  margin-top: 1px;
+}
+
+.cardHeaderChevron {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.cardHeaderChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Card Panel (Accordion Content) ───────────────────────── */
+.cardPanel {
+  padding: 0 var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: cardPanelIn var(--duration-slow) var(--ease-out) both;
+}
+
+@keyframes cardPanelIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cardPanelDivider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 0 calc(-1 * var(--space-4));
+}
+
+/* ── Choice Tile (Platform / Type Selector) ───────────────── */
+.choiceTileGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.choiceTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background-color: var(--card);
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.choiceTile:hover {
+  border-color: var(--muted-foreground);
+  background-color: var(--muted);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.choiceTile:active {
+  transform: translateY(0);
+}
+
+.choiceTileActive {
+  border-color: var(--primary);
+  background-color: var(--accent);
+  box-shadow: var(--shadow-primary), var(--shadow-sm);
+}
+
+.choiceTileActive:hover {
+  border-color: var(--primary);
+  background-color: var(--accent);
+}
+
+.choiceTileIcon {
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.choiceTileLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--foreground);
+  text-align: center;
+  line-height: var(--leading-tight);
+}
+
+.choiceTileActive .choiceTileLabel {
+  color: var(--primary);
+}
+
+/* ── Choice Button (Smaller pill-style selector) ──────────── */
+.choiceButtonGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.choiceButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: var(--space-1-5) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border);
+  background-color: var(--card);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.choiceButton:hover {
+  border-color: var(--muted-foreground);
+  background-color: var(--muted);
+}
+
+.choiceButtonIcon {
+  font-size: var(--text-sm);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.choiceButtonActive {
+  border-color: var(--primary);
+  background-color: var(--accent);
+  color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.choiceButtonActive:hover {
+  border-color: var(--primary-hover);
+  background-color: var(--accent);
+}
+
+/* ── Form: Label ──────────────────────────────────────────── */
+.label {
+  display: block;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--muted-foreground);
+  margin-bottom: var(--space-1-5);
+  user-select: none;
+}
+
+/* ── Form: Input ──────────────────────────────────────────── */
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  outline: none;
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+}
+
+.input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.input:hover {
+  border-color: var(--muted-foreground);
+}
+
+.input:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.inputSmall {
+  height: 30px;
+  font-size: var(--text-xs);
+  padding: 0 var(--space-2);
+}
+
+/* ── Form: Textarea ───────────────────────────────────────── */
+.textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  outline: none;
+  resize: vertical;
+  line-height: var(--leading-normal);
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+  field-sizing: content;      /* modern auto-resize */
+}
+
+.textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.textarea:hover {
+  border-color: var(--muted-foreground);
+}
+
+.textarea:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* ── Toggle Switch (CSS-only) ─────────────────────────────── */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  width: 40px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background-color: var(--muted);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: background-color var(--duration-normal) ease,
+              border-color var(--duration-normal) ease;
+  flex-shrink: 0;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.toggle:hover {
+  border-color: var(--muted-foreground);
+}
+
+.toggleActive {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.toggleActive::after {
+  transform: translateX(18px);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.toggleLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+/* ── Segmented Control (Private / Group toggle) ───────────── */
+.segmentedControl {
+  display: flex;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border);
+}
+
+.segmentedButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  padding: var(--space-2) var(--space-3);
+  border-radius: calc(var(--radius-md) - 2px);
+  border: none;
+  background: none;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.segmentedButton:hover {
+  color: var(--foreground);
+}
+
+.segmentedButtonActive {
+  background-color: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+.segmentedButtonIcon {
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+/* ── Message Card ─────────────────────────────────────────── */
+.messageCard {
+  display: flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background-color: var(--card);
+  overflow: hidden;
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+  animation: scaleIn var(--duration-slow) var(--ease-out) both;
+}
+
+.messageCard:hover {
+  border-color: color-mix(in srgb, var(--border) 50%, var(--muted-foreground));
+  box-shadow: var(--shadow-sm);
+}
+
+.messageCardDragging {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+  opacity: 0.95;
+}
+
+/* ── Reorder Buttons ──────────────────────────────────────── */
+.reorderButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  border-right: 1px solid var(--border);
+  background-color: var(--muted);
+  gap: 0;
+}
+
+.reorderButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease,
+              background-color var(--duration-fast) ease;
+  font-size: var(--text-xs);
+}
+
+.reorderButton:hover {
+  color: var(--foreground);
+  background-color: var(--border);
+}
+
+.reorderButton:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.reorderButtonDivider {
+  width: 60%;
+  height: 1px;
+  background-color: var(--border);
+}
+
+/* ── Bubble Editor ────────────────────────────────────────── */
+.bubbleEditor {
+  flex: 1;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.bubbleEditorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bubbleEditorRowSpaced {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* ── Sender Badge ─────────────────────────────────────────── */
+.senderBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.senderBadgeYou {
+  background-color: var(--accent);
+  color: var(--primary);
+}
+
+.senderBadgeOther {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.senderBadgeSystem {
+  background-color: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+}
+
+/* ── Delete Button ────────────────────────────────────────── */
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+  flex-shrink: 0;
+}
+
+.deleteButton:hover {
+  color: var(--destructive);
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+.deleteButton:active {
+  transform: scale(0.92);
+}
+
+/* ── Add Message Button ───────────────────────────────────── */
+.addMessageButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border);
+  background: none;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  user-select: none;
+}
+
+.addMessageButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+.addMessageButton:active {
+  transform: scale(0.98);
+}
+
+.addMessageButtonIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.addMessageButton:hover .addMessageButtonIcon {
+  transform: rotate(90deg);
+}
+
+/* ── Export Button ────────────────────────────────────────── */
+.exportButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: none;
+  background: linear-gradient(135deg, var(--primary), #6d28d9);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  box-shadow: var(--shadow-primary);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.exportButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--duration-normal) ease;
+}
+
+.exportButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary-lg);
+}
+
+.exportButton:hover::before {
+  opacity: 1;
+}
+
+.exportButton:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-primary);
+}
+
+.exportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.exportButtonSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.exportActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.exportActions > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.previewButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  user-select: none;
+}
+
+.previewButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--accent);
+}
+
+.previewButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Progress Bar ─────────────────────────────────────────── */
+.progressBar {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background-color: var(--muted);
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--primary), #6d28d9);
+  transition: width 0.4s var(--ease-out);
+  position: relative;
+}
+
+.progressBarFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+  background-size: 200% 100%;
+}
+
+.progressLabel {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  text-align: center;
+  margin-top: var(--space-1-5);
+}
+
+/* ── Message List ─────────────────────────────────────────── */
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.messageList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.messageList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messageList::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.messageListEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--muted-foreground);
+  text-align: center;
+  gap: var(--space-2);
+}
+
+.messageListEmptyIcon {
+  font-size: var(--text-3xl);
+  opacity: 0.4;
+}
+
+.messageListEmptyText {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* ── Badge (Count pill) ───────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1-5);
+  border-radius: var(--radius-full);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.625rem; /* 10px */
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.badgeMuted {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+/* ── Avatar Upload ────────────────────────────────────────── */
+.avatarUpload {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  transition: border-color var(--duration-normal) ease;
+}
+
+.avatarUpload:hover {
+  border-color: var(--primary);
+}
+
+.avatarUploadImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarUploadOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-normal) ease;
+  color: white;
+  font-size: var(--text-base);
+}
+
+.avatarUpload:hover .avatarUploadOverlay {
+  opacity: 1;
+}
+
+.avatarUploadSmall {
+  width: 36px;
+  height: 36px;
+}
+
+/* ── Avatar Initial (letter fallback) ─────────────────────── */
+.avatarInitial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: white;
+  background: linear-gradient(135deg, var(--primary), #6d28d9);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.avatarInitialSmall {
+  font-size: var(--text-xs);
+}
+
+/* ── Clear Button ─────────────────────────────────────────── */
+.clearButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: none;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+  white-space: nowrap;
+}
+
+.clearButton:hover {
+  border-color: var(--destructive);
+  color: var(--destructive);
+  background-color: rgba(239, 68, 68, 0.06);
+}
+
+.clearButton:active {
+  transform: scale(0.96);
+}
+
+/* ── Verified Badge ───────────────────────────────────────── */
+.verifiedBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wa-blue-tick);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: 2px solid var(--card);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.verifiedBadge:hover {
+  transform: scale(1.15);
+}
+
+/* ── Color Dot ────────────────────────────────────────────── */
+.colorDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform var(--duration-fast) var(--ease-spring),
+              border-color var(--duration-fast) ease;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.colorDot:hover {
+  transform: scale(1.2);
+}
+
+.colorDotActive {
+  border-color: var(--foreground);
+  transform: scale(1.15);
+}
+
+.colorDotRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  flex-wrap: wrap;
+}
+
+/* ── Group Member Row ─────────────────────────────────────── */
+.groupMemberRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2) var(--space-2-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+}
+
+.groupMemberRow:hover {
+  border-color: color-mix(in srgb, var(--border) 50%, var(--muted-foreground));
+  box-shadow: var(--shadow-xs);
+}
+
+.groupMemberName {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupMemberActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ── Status Select (Delivery status dropdown) ─────────────── */
+.statusSelect {
+  appearance: none;
+  height: 30px;
+  padding: 0 var(--space-6) 0 var(--space-2-5);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+}
+
+.statusSelect:hover {
+  border-color: var(--muted-foreground);
+}
+
+.statusSelect:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+/* ── Inline field groups ──────────────────────────────────── */
+.fieldRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.fieldRow > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+/* ── Section separator ────────────────────────────────────── */
+.sectionDivider {
+  height: 1px;
+  background-color: var(--border);
+  margin: var(--space-1) 0;
+}
+
+/* ── Helper text ──────────────────────────────────────────── */
+.helperText {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  line-height: var(--leading-normal);
+}
+
+.sectionStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, var(--accent)) 0%, var(--card) 100%);
+  box-shadow: var(--shadow-xs);
+}
+
+.sectionBlockAccent {
+  border-color: color-mix(in srgb, var(--border) 55%, #25d366);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 0 0 1px rgba(37, 211, 102, 0.06);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sectionHeadingContent {
+  min-width: 0;
+}
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.sectionSubtitle {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  line-height: var(--leading-relaxed);
+}
+
+.sectionIconBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #25d366;
+  background: rgba(37, 211, 102, 0.1);
+  border: 1px solid rgba(37, 211, 102, 0.18);
+}
+
+.compactSelect {
+  appearance: none;
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--space-10) 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--duration-normal) ease,
+              box-shadow var(--duration-normal) ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.compactSelect:hover {
+  border-color: var(--muted-foreground);
+}
+
+.compactSelect:focus {
+  border-color: #25d366;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.12);
+}
+
+.primaryActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  background: linear-gradient(135deg, #25d366, #1fbe5a);
+  color: #062a14;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--duration-fast) ease,
+              box-shadow var(--duration-normal) ease,
+              opacity var(--duration-normal) ease;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.18);
+}
+
+.primaryActionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(37, 211, 102, 0.22);
+}
+
+.primaryActionButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.quickAddGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.quickAddGridGroup {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quickAddButton {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 46px;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed color-mix(in srgb, var(--border) 70%, var(--muted-foreground));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 92%, var(--muted)) 0%, var(--background) 100%);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-normal) ease;
+}
+
+.quickAddButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--accent) 72%, var(--card));
+  box-shadow: var(--shadow-xs);
+}
+
+.quickAddButtonLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tooltip (simple title-based, CSS only) ───────────────── */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background-color: var(--foreground);
+  color: var(--background);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) ease,
+              transform var(--duration-normal) ease;
+  z-index: var(--z-tooltip, 500);
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+.sidebarFooter {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border);
+  background-color: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: sticky;
+  bottom: 0;
+}
