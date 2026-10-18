@@ -26,7 +26,13 @@ export class AudioMixer {
   }
 
   public getStream(): MediaStream | null {
+    if (this.isExport && !this.ctx) this.init();
     return this.streamDest ? this.streamDest.stream : null;
+  }
+
+  public getSampleRate(): number {
+    if (!this.ctx) this.init();
+    return this.ctx!.sampleRate;
   }
 
   private async loadBuffer(url: string): Promise<AudioBuffer | null> {

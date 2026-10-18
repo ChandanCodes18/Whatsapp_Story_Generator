@@ -202,102 +202,119 @@ async function exportVideoFast(options: VideoExportOptions): Promise<void> {
   const element = document.getElementById(elementId);
   if (!element) throw new Error(`Element #${elementId} not found`);
 
-  // Lock resolution: use configured multiplier, NOT window.devicePixelRatio
   const pixelRatio = settings.resolution;
   const width = element.offsetWidth * pixelRatio;
   const height = element.offsetHeight * pixelRatio;
 
-  // ── Determine best codec ────────────────────────────────────────────────
+  // ── Determine best video codec ──────────────────────────────────────────
   let encoderCodec = 'vp8';
-  let muxerCodec: 'V_VP8' | 'V_VP9' = 'V_VP8';
-
+  let muxerVideoCodec: 'V_VP8' | 'V_VP9' = 'V_VP8';
   try {
     const vp9Result = await VideoEncoder.isConfigSupported({
-      codec: 'vp09.00.10.08',
-      width,
-      height,
-      bitrate: 5_000_000,
-      framerate: 30,
+      codec: 'vp09.00.10.08', width, height, bitrate: 5_000_000, framerate: 30,
     });
-    if (vp9Result.supported) {
-      encoderCodec = 'vp09.00.10.08';
-      muxerCodec = 'V_VP9';
+    if (vp9Result.supported) { encoderCodec = 'vp09.00.10.08'; muxerVideoCodec = 'V_VP9'; }
+  } catch { /* stay with VP8 */ }
+
+  // ── Load the SFX file ───────────────────────────────────────────────────
+  // Fetch the ping sound and decode it into raw PCM samples using a temporary
+  // AudioContext so we know the exact waveform data.
+  const AUDIO_SAMPLE_RATE = 48000;
+  let sfxSamples: Float32Array | null = null;
+  try {
+    const resp = await fetch('/sfx/ping.mp3');
+    const buf = await resp.arrayBuffer();
+    const tmpCtx = new AudioContext({ sampleRate: AUDIO_SAMPLE_RATE });
+    const decoded = await tmpCtx.decodeAudioData(buf);
+    // Mix to mono
+    const mono = new Float32Array(decoded.length);
+    for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
+      const channelData = decoded.getChannelData(ch);
+      for (let i = 0; i < mono.length; i++) mono[i] += channelData[i] / decoded.numberOfChannels;
     }
-  } catch {
-    // VP9 not available, stay with VP8
+    sfxSamples = mono;
+    await tmpCtx.close();
+  } catch (e) {
+    console.warn('Could not load ping.mp3, export will be silent:', e);
   }
 
-  // ── Set up muxer (in-memory) ────────────────────────────────────────────
+  // ── Check AudioEncoder support ──────────────────────────────────────────
+  let audioEncoderSupported = false;
+  try {
+    if (typeof AudioEncoder !== 'undefined' && sfxSamples) {
+      const res = await AudioEncoder.isConfigSupported({
+        codec: 'opus', sampleRate: AUDIO_SAMPLE_RATE, numberOfChannels: 1, bitrate: 64000,
+      });
+      audioEncoderSupported = !!res.supported;
+    }
+  } catch { /* no audio encoder */ }
+
+  // ── Set up muxer ────────────────────────────────────────────────────────
   const target = new ArrayBufferTarget();
   const muxer = new Muxer({
     target,
-    video: {
-      codec: muxerCodec,
-      width,
-      height,
-    },
+    video: { codec: muxerVideoCodec, width, height },
+    ...(audioEncoderSupported ? {
+      audio: { codec: 'A_OPUS', sampleRate: AUDIO_SAMPLE_RATE, numberOfChannels: 1 },
+    } : {}),
+    firstTimestampBehavior: 'offset',
   });
 
-  // ── Set up VideoEncoder ─────────────────────────────────────────────────
+  // ── Video encoder ───────────────────────────────────────────────────────
   let encoderError: Error | null = null;
-
   const encoder = new VideoEncoder({
-    output: (chunk, meta) => {
-      muxer.addVideoChunk(chunk, meta);
-    },
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
     error: (e) => {
       console.error('VideoEncoder error:', e);
       encoderError = e instanceof Error ? e : new Error(String(e));
     },
   });
+  encoder.configure({ codec: encoderCodec, width, height, bitrate: 5_000_000, framerate: 30 });
 
-  encoder.configure({
-    codec: encoderCodec,
-    width,
-    height,
-    bitrate: 5_000_000,
-    framerate: 30,
-  });
-
-  // ── Frame capture state ─────────────────────────────────────────────────
+  // ── PASS 1: Record video frames and which frame indices get a ping ───────
+  const frameDurationMicros = 33333; // 30 FPS
   let frameIndex = 0;
-  const frameDurationMicros = 33333; // 30 FPS = 33333 µs per frame
+  const pingSoundAtFrames: number[] = []; // frame indices where a message appears
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
 
+  // Wrap AudioMixer.playSfx to record ping timestamps
+  const dummyMixer = {
+    playSfx: () => {
+      pingSoundAtFrames.push(frameIndex);
+      return Promise.resolve();
+    },
+    playVoiceNote: async () => {},
+    close: () => {},
+  } as unknown as AudioMixer;
+
   try {
     if (typeof window !== 'undefined') (window as any).isExportingVideo = true;
 
     await playMessageSequence({
       ...options,
-      // No audioMixer — fast export is video-only
+      audioMixer: dummyMixer,
       includeInitialPause: true,
       includeFinalPause: true,
       fastMode: true,
       onFrame: async () => {
         if (encoderError) throw encoderError;
-
         try {
-          // Snapshot the DOM element (same call as legacy path)
           const snap = await toCanvas(element, { pixelRatio, cacheBust: false });
           ctx.clearRect(0, 0, width, height);
           ctx.drawImage(snap, 0, 0, width, height);
 
-          // Encode the frame via WebCodecs
           const frame = new VideoFrame(canvas, {
             timestamp: frameIndex * frameDurationMicros,
             duration: frameDurationMicros,
           });
-
           encoder.encode(frame, { keyFrame: frameIndex % 150 === 0 });
           frame.close();
           frameIndex++;
 
-          // Yield to main thread every 10 frames for UI responsiveness
-          // (progress bar updates, user interaction)
           if (frameIndex % 10 === 0) {
             await new Promise<void>(r => setTimeout(r, 0));
           }
@@ -306,16 +323,69 @@ async function exportVideoFast(options: VideoExportOptions): Promise<void> {
         }
       },
     });
-
   } finally {
     if (typeof window !== 'undefined') (window as any).isExportingVideo = false;
   }
 
-  // ── Flush encoder and finalize container ────────────────────────────────
   await encoder.flush();
   encoder.close();
-  muxer.finalize();
 
+  // ── PASS 2: Render audio offline and encode it ──────────────────────────
+  if (audioEncoderSupported && sfxSamples && pingSoundAtFrames.length > 0) {
+    const totalFrames = frameIndex;
+    const totalVideoSeconds = totalFrames / 30;
+    const totalAudioSamples = Math.ceil(totalVideoSeconds * AUDIO_SAMPLE_RATE);
+
+    // Build a full-length mono audio buffer with pings at the right positions
+    const fullAudio = new Float32Array(totalAudioSamples);
+    for (const pingFrame of pingSoundAtFrames) {
+      const startSample = Math.round((pingFrame / 30) * AUDIO_SAMPLE_RATE);
+      for (let i = 0; i < sfxSamples.length; i++) {
+        const idx = startSample + i;
+        if (idx < totalAudioSamples) {
+          fullAudio[idx] = Math.max(-1, Math.min(1, fullAudio[idx] + sfxSamples[i] * 0.55));
+        }
+      }
+    }
+
+    // Encode in chunks of 1024 samples (Opus frame size)
+    const audioEncoder = new AudioEncoder({
+      output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+      error: (e) => console.warn('AudioEncoder error:', e),
+    });
+    audioEncoder.configure({
+      codec: 'opus',
+      sampleRate: AUDIO_SAMPLE_RATE,
+      numberOfChannels: 1,
+      bitrate: 64000,
+    });
+
+    const CHUNK_SIZE = 1024;
+    let sampleOffset = 0;
+    while (sampleOffset < totalAudioSamples) {
+      const chunkLength = Math.min(CHUNK_SIZE, totalAudioSamples - sampleOffset);
+      const chunk = fullAudio.slice(sampleOffset, sampleOffset + chunkLength);
+      const timestampUs = Math.round((sampleOffset / AUDIO_SAMPLE_RATE) * 1_000_000);
+
+      const audioData = new AudioData({
+        format: 'f32',
+        sampleRate: AUDIO_SAMPLE_RATE,
+        numberOfFrames: chunkLength,
+        numberOfChannels: 1,
+        timestamp: timestampUs,
+        data: chunk,
+      });
+      audioEncoder.encode(audioData);
+      audioData.close();
+      sampleOffset += chunkLength;
+    }
+
+    await audioEncoder.flush();
+    audioEncoder.close();
+  }
+
+  // ── Finalize and download ───────────────────────────────────────────────
+  muxer.finalize();
   const { buffer } = target;
   const blob = new Blob([buffer], { type: 'video/webm' });
   downloadBlob(blob, 'whatsapp-story.webm');
