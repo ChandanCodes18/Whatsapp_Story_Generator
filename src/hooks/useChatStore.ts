@@ -243,6 +243,10 @@ export const useChatStore = create<ChatStore>((set) => ({
             duration: m.duration,
             callType: m.callType,
             callStatus: m.callStatus,
+            pollQuestion: m.pollQuestion,
+            pollOptions: m.pollOptions,
+            pollAllowMultiple: m.pollAllowMultiple,
+            pollSelectedOptionIds: m.pollSelectedOptionIds || [],
           };
 
       return {
@@ -310,6 +314,35 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   clearMessages: () => set({ messages: [] }),
 
+  togglePollOption: (messageId, optionId) =>
+    set((state) => ({
+      messages: state.messages.map((m) => {
+        if (m.id !== messageId || m.type !== 'poll') return m;
+        const currentSelected = (m as any).pollSelectedOptionIds || [];
+        const allowMultiple = (m as any).pollAllowMultiple ?? false;
+
+        let nextSelected: string[];
+        if (allowMultiple) {
+          if (currentSelected.includes(optionId)) {
+            nextSelected = currentSelected.filter((id: string) => id !== optionId);
+          } else {
+            nextSelected = [...currentSelected, optionId];
+          }
+        } else {
+          if (currentSelected.includes(optionId)) {
+            nextSelected = [];
+          } else {
+            nextSelected = [optionId];
+          }
+        }
+
+        return {
+          ...m,
+          pollSelectedOptionIds: nextSelected,
+        } as Message;
+      }),
+    })),
+
   setExportSettings: (settings) =>
     set((state) => ({
       exportSettings: { ...state.exportSettings, ...settings },
@@ -324,5 +357,27 @@ export const useChatStore = create<ChatStore>((set) => ({
         newSections.add(section);
       }
       return { expandedSections: newSections };
+    }),
+
+  importFromScript: (parsed) =>
+    set((state) => {
+      const isGroup = parsed.members.length > 1;
+      return {
+        // Switch to group mode if more than one "other" character
+        chatMode: isGroup ? 'group' : 'private',
+        groupName: parsed.groupName,
+        // Update "me" name
+        currentUser: { ...state.currentUser, name: parsed.myName },
+        // Replace group members
+        groupMembers: parsed.members,
+        // For private chats set contactName to the single other speaker
+        contactName: !isGroup && parsed.members.length === 1
+          ? parsed.members[0].name
+          : state.contactName,
+        // Replace all messages
+        messages: parsed.messages,
+        // Open the messages section so user can see the result
+        expandedSections: new Set([...state.expandedSections, 'messages' as const]),
+      };
     }),
 }));

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 import styles from '@/styles/editor.module.css';
 import { SYSTEM_EVENT_OPTIONS } from '@/lib/constants';
 import { useChatStore } from '@/hooks/useChatStore';
@@ -165,20 +165,32 @@ export function MessageBubbleEditor({
             <select
               className={styles.statusSelect}
               value={message.type}
-              onChange={(e) =>
-                updateMessage(message.id, {
-                  type: e.target.value as any,
-                  text: e.target.value === 'deleted'
+              onChange={(e) => {
+                const nextType = e.target.value as any;
+                const updates: any = {
+                  type: nextType,
+                  text: nextType === 'deleted'
                     ? (isMe ? 'You deleted this message' : 'This message was deleted')
                     : message.text,
-                })
-              }
+                };
+                if (nextType === 'poll' && !(message as any).pollOptions) {
+                  updates.pollQuestion = (message as any).pollQuestion || message.text || 'Poll Question';
+                  updates.pollOptions = [
+                    { id: `opt-${Date.now()}-1`, text: 'Option 1', votes: 0 },
+                    { id: `opt-${Date.now()}-2`, text: 'Option 2', votes: 0 },
+                  ];
+                  updates.pollAllowMultiple = false;
+                  updates.pollSelectedOptionIds = [];
+                }
+                updateMessage(message.id, updates);
+              }}
             >
               <option value="text">Text</option>
               <option value="photo">Photo</option>
               <option value="video">Video</option>
               <option value="audio">Audio</option>
               <option value="call">Call Log</option>
+              <option value="poll">Poll</option>
               <option value="deleted">Deleted</option>
             </select>
           )}
@@ -299,6 +311,107 @@ export function MessageBubbleEditor({
               <option value="missed">Incoming Missed</option>
               <option value="outgoing">Outgoing</option>
             </select>
+          </div>
+        )}
+
+        {!isSystemEvent && message.type === 'poll' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <input
+              type="text"
+              className={styles.input}
+              value={message.pollQuestion || message.text || ''}
+              onChange={(e) =>
+                updateMessage(message.id, {
+                  pollQuestion: e.target.value,
+                  text: e.target.value,
+                })
+              }
+              placeholder="Poll question..."
+              style={{ fontSize: '13px', fontWeight: 600 }}
+            />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {(message.pollOptions || []).map((option, idx) => (
+                <div key={option.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={option.text}
+                    onChange={(e) => {
+                      const updatedOptions = [...(message.pollOptions || [])];
+                      updatedOptions[idx] = { ...updatedOptions[idx], text: e.target.value };
+                      updateMessage(message.id, { pollOptions: updatedOptions });
+                    }}
+                    placeholder={`Option ${idx + 1}`}
+                    style={{ flex: 1, height: '30px', fontSize: '12px' }}
+                  />
+                  {(message.pollOptions?.length || 0) > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedOptions = (message.pollOptions || []).filter((_, i) => i !== idx);
+                        updateMessage(message.id, { pollOptions: updatedOptions });
+                      }}
+                      className={styles.deleteButton}
+                      title="Remove option"
+                      style={{ height: '30px', width: '30px' }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {(message.pollOptions?.length || 0) < 12 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const currentOptions = message.pollOptions || [];
+                  const newOption = {
+                    id: `opt-${Date.now()}-${currentOptions.length + 1}`,
+                    text: `Option ${currentOptions.length + 1}`,
+                    votes: 0,
+                  };
+                  updateMessage(message.id, { pollOptions: [...currentOptions, newOption] });
+                }}
+                className={styles.quickAddButton}
+                style={{
+                  height: '28px',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Plus size={12} />
+                Add Option
+              </button>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '2px' }}>
+              <input
+                type="checkbox"
+                id={`bubble-poll-multiple-${message.id}`}
+                checked={message.pollAllowMultiple ?? false}
+                onChange={(e) =>
+                  updateMessage(message.id, { pollAllowMultiple: e.target.checked })
+                }
+                style={{ cursor: 'pointer', accentColor: '#00a884', width: '14px', height: '14px' }}
+              />
+              <label
+                htmlFor={`bubble-poll-multiple-${message.id}`}
+                style={{
+                  fontSize: '11.5px',
+                  color: 'var(--foreground)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+              >
+                Allow multiple answers
+              </label>
+            </div>
           </div>
         )}
 

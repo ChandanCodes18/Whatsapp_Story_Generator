@@ -11,6 +11,7 @@ import {
   Sun,
   Moon,
   Sparkles,
+  FileText,
 } from 'lucide-react';
 import styles from '@/styles/editor.module.css';
 import { useChatStore } from '@/hooks/useChatStore';
@@ -20,6 +21,7 @@ import { ContactInfoSection } from './ContactInfoSection';
 import { MessagesSection } from './MessagesSection';
 import { SettingsSection } from './SettingsSection';
 import { ExportSection } from './ExportSection';
+import { ImportScriptSection } from './ImportScriptSection';
 
 interface SectionConfig {
   id: EditorSection;
@@ -43,6 +45,13 @@ export function EditorSidebar() {
       subtitle: 'Platform & type',
       icon: <LayoutGrid size={16} />,
       content: <CreateSection />,
+    },
+    {
+      id: 'import',
+      title: 'Import Script',
+      subtitle: 'From .txt or .md file',
+      icon: <FileText size={16} />,
+      content: <ImportScriptSection />,
     },
     {
       id: 'contact',

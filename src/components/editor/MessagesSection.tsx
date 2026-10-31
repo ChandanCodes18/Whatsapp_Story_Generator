@@ -18,7 +18,7 @@ export function MessagesSection() {
 
   // Message Creator state
   const [senderId, setSenderId] = useState<'me' | 'them' | string>('me');
-  const [msgType, setMsgType] = useState<'text' | 'photo' | 'video' | 'audio' | 'call' | 'deleted'>('text');
+  const [msgType, setMsgType] = useState<'text' | 'photo' | 'video' | 'audio' | 'call' | 'deleted' | 'poll'>('text');
   const [text, setText] = useState('');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [mediaCaption, setMediaCaption] = useState('');
@@ -27,6 +27,11 @@ export function MessagesSection() {
   const [callStatus, setCallStatus] = useState<'answered' | 'missed' | 'outgoing'>('answered');
   const [timestamp, setTimestamp] = useState('');
   const [status, setStatus] = useState<'sent' | 'delivered' | 'read'>('read');
+
+  // Poll state
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState<string[]>(['Option 1', 'Option 2']);
+  const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
 
   // Initialize timestamp on client side
   useEffect(() => {
@@ -40,6 +45,8 @@ export function MessagesSection() {
     // Resolve defaults for deleted messages
     const defaultText = msgType === 'deleted' 
       ? (isMe ? 'You deleted this message' : 'This message was deleted') 
+      : msgType === 'poll'
+      ? (pollQuestion.trim() || 'Poll')
       : text;
 
     const newMsg: any = {
@@ -71,6 +78,25 @@ export function MessagesSection() {
     } else if (msgType === 'call') {
       newMsg.callType = callType;
       newMsg.callStatus = callStatus;
+    } else if (msgType === 'poll') {
+      const validOptions = pollOptions
+        .filter((opt) => opt.trim().length > 0)
+        .map((opt, i) => ({
+          id: `opt-${Date.now()}-${i + 1}`,
+          text: opt.trim(),
+          votes: 0,
+        }));
+
+      newMsg.pollQuestion = pollQuestion.trim() || 'Poll';
+      newMsg.pollOptions =
+        validOptions.length > 0
+          ? validOptions
+          : [
+              { id: `opt-${Date.now()}-1`, text: 'Option 1', votes: 0 },
+              { id: `opt-${Date.now()}-2`, text: 'Option 2', votes: 0 },
+            ];
+      newMsg.pollAllowMultiple = pollAllowMultiple;
+      newMsg.pollSelectedOptionIds = [];
     }
 
     addMessage(newMsg);
@@ -79,6 +105,9 @@ export function MessagesSection() {
     setText('');
     setMediaUrl(null);
     setMediaCaption('');
+    setPollQuestion('');
+    setPollOptions(['Option 1', 'Option 2']);
+    setPollAllowMultiple(false);
     setTimestamp(formatTime());
   };
 
@@ -173,6 +202,7 @@ export function MessagesSection() {
             <option value="video">Video Message</option>
             <option value="audio">Voice Note</option>
             <option value="call">Call Log</option>
+            <option value="poll">Poll</option>
             <option value="deleted">Deleted Message</option>
           </select>
         </div>
@@ -290,6 +320,97 @@ export function MessagesSection() {
                 <option value="missed">Incoming Missed</option>
                 <option value="outgoing">Outgoing</option>
               </select>
+            </div>
+          </div>
+        )}
+
+        {msgType === 'poll' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Poll Question</label>
+              <input
+                type="text"
+                value={pollQuestion}
+                onChange={(e) => setPollQuestion(e.target.value)}
+                placeholder="Ask a question..."
+                className={styles.input}
+              />
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Options</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {pollOptions.map((option, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [...pollOptions];
+                        newOptions[idx] = e.target.value;
+                        setPollOptions(newOptions);
+                      }}
+                      placeholder={`Option ${idx + 1}`}
+                      className={styles.input}
+                      style={{ flex: 1, height: '32px' }}
+                    />
+                    {pollOptions.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPollOptions(pollOptions.filter((_, i) => i !== idx));
+                        }}
+                        className={styles.deleteButton}
+                        title="Remove option"
+                        style={{ height: '32px', width: '32px' }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {pollOptions.length < 12 && (
+                <button
+                  type="button"
+                  onClick={() => setPollOptions([...pollOptions, `Option ${pollOptions.length + 1}`])}
+                  className={styles.quickAddButton}
+                  style={{
+                    marginTop: '6px',
+                    height: '30px',
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Plus size={12} />
+                  Add Option
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
+              <input
+                type="checkbox"
+                id="creator-poll-multiple"
+                checked={pollAllowMultiple}
+                onChange={(e) => setPollAllowMultiple(e.target.checked)}
+                style={{ cursor: 'pointer', accentColor: '#00a884', width: '15px', height: '15px' }}
+              />
+              <label
+                htmlFor="creator-poll-multiple"
+                style={{
+                  fontSize: '12px',
+                  color: 'var(--foreground)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+              >
+                Allow multiple answers
+              </label>
             </div>
           </div>
         )}

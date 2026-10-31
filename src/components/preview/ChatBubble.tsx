@@ -580,6 +580,117 @@ const renderDeletedContent = (
   );
 };
 
+const renderPollContent = (
+  message: Message,
+  isDark: boolean,
+  showTimestamp: boolean,
+  showReadReceipt: boolean,
+  isOutgoing: boolean,
+  togglePollOption: (messageId: string, optionId: string) => void
+) => {
+  if (message.type !== 'poll') return null;
+
+  const question = message.pollQuestion || message.text || 'Poll Question';
+  const options =
+    message.pollOptions && message.pollOptions.length > 0
+      ? message.pollOptions
+      : [
+          { id: 'opt-1', text: 'Option 1' },
+          { id: 'opt-2', text: 'Option 2' },
+        ];
+  const allowMultiple = message.pollAllowMultiple ?? false;
+  const selectedOptionIds = message.pollSelectedOptionIds || [];
+
+  return (
+    <div className={styles.pollContainer}>
+      <div className={styles.pollHeader}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <svg
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            fill="none"
+            stroke={isDark ? '#00a884' : '#00a884'}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ flexShrink: 0 }}
+          >
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          <span className={styles.pollQuestion}>{question}</span>
+        </div>
+        <div className={styles.pollSubtitle}>
+          <span>•</span>
+          <span>{allowMultiple ? 'Select one or more' : 'Select one'}</span>
+        </div>
+      </div>
+
+      <div className={styles.pollOptionsList}>
+        {options.map((opt) => {
+          const isSelected = selectedOptionIds.includes(opt.id);
+          return (
+            <div
+              key={opt.id}
+              className={styles.pollOptionItem}
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePollOption(message.id, opt.id);
+              }}
+            >
+              <div
+                className={`${
+                  allowMultiple ? styles.pollCheckboxSquare : styles.pollCheckboxCircle
+                } ${isSelected ? styles.pollCheckboxChecked : ''}`}
+              >
+                {isSelected && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="11"
+                    height="11"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+              <span className={styles.pollOptionText}>{opt.text}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={styles.pollDivider} />
+
+      <div className={styles.pollFooter}>
+        <button
+          type="button"
+          className={styles.pollViewVotes}
+          onClick={(e) => e.stopPropagation()}
+        >
+          View votes
+        </button>
+
+        <span
+          className={`${styles.bubbleMeta} ${isDark ? styles.bubbleMetaDark : ''}`}
+          style={{ margin: 0, float: 'none', display: 'inline-flex' }}
+        >
+          {showTimestamp && <span className={styles.timestamp}>{message.timestamp}</span>}
+          {isOutgoing && showReadReceipt && (
+            <ReadReceipt status={message.status} isDark={isDark} />
+          )}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const renderBubbleContent = (
   message: Message,
   isDark: boolean,
@@ -587,11 +698,21 @@ const renderBubbleContent = (
   showReadReceipt: boolean,
   isOutgoing: boolean,
   playingMessageId: string | null,
-  playingProgress: number
+  playingProgress: number,
+  togglePollOption: (messageId: string, optionId: string) => void
 ) => {
   if (message.type === 'system_event') return null;
 
   switch (message.type) {
+    case 'poll':
+      return renderPollContent(
+        message,
+        isDark,
+        showTimestamp,
+        showReadReceipt,
+        isOutgoing,
+        togglePollOption
+      );
     case 'photo':
       return renderPhotoContent(message, isDark, showTimestamp, showReadReceipt, isOutgoing);
     case 'video':
@@ -629,6 +750,7 @@ export function ChatBubble({
   
   const playingMessageId = useChatStore((s) => s.playingMessageId);
   const playingMessageProgress = useChatStore((s) => s.playingMessageProgress);
+  const togglePollOption = useChatStore((s) => s.togglePollOption);
 
   const bubbleClasses = [
     styles.bubble,
@@ -738,7 +860,8 @@ export function ChatBubble({
           showReadReceipt,
           isOutgoing,
           playingMessageId,
-          playingMessageProgress
+          playingMessageProgress,
+          togglePollOption
         )}
       </div>
     </div>

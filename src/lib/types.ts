@@ -7,6 +7,7 @@ export type MessageType =
   | 'audio'
   | 'call'
   | 'deleted'
+  | 'poll'
   | 'system_event';
 
 export type SystemEventSubtype =
@@ -17,6 +18,12 @@ export type SystemEventSubtype =
   | 'participant_removed'
   | 'group_renamed'
   | 'group_created';
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes?: number;
+}
 
 interface BaseMessage {
   id: string;
@@ -43,6 +50,12 @@ export interface RegularMessage extends BaseMessage {
   duration?: string;
   callType?: 'voice' | 'video';
   callStatus?: 'answered' | 'missed' | 'outgoing';
+
+  // Poll specific properties
+  pollQuestion?: string;
+  pollOptions?: PollOption[];
+  pollAllowMultiple?: boolean;
+  pollSelectedOptionIds?: string[];
 }
 
 export interface SystemEventMessage extends BaseMessage {
@@ -96,7 +109,7 @@ export interface ExportSettings {
   videoHeight: number;
 }
 
-export type EditorSection = 'create' | 'contact' | 'messages' | 'settings' | 'export';
+export type EditorSection = 'create' | 'contact' | 'messages' | 'settings' | 'export' | 'import';
 
 export interface ChatStore {
   // Current User (Me) profile
@@ -171,9 +184,13 @@ export interface ChatStore {
   moveMessageUp: (id: string) => void;
   moveMessageDown: (id: string) => void;
   clearMessages: () => void;
+  togglePollOption: (messageId: string, optionId: string) => void;
 
   setExportSettings: (settings: Partial<ExportSettings>) => void;
   toggleSection: (section: EditorSection) => void;
+
+  /** Bulk-import from a parsed script — replaces messages, members and group info */
+  importFromScript: (parsed: import('@/lib/scriptParser').ParsedScript) => void;
 }
 
 export interface TimelineMediaMetadata {
